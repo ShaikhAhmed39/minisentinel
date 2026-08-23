@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MiniSentinel Dashboard</title>
+    <style>
+        body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 30px; }
+        h1 { color: #58a6ff; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .healthy { color: #3fb950; }
+        .down { color: #f85149; }
+        .metric { display: inline-block; margin-right: 30px; }
+        .incident { border-bottom: 1px solid #30363d; padding: 8px 0; }
+    </style>
+</head>
+<body>
+    <h1>🛡️ MiniSentinel Dashboard</h1>
+
+    <div class="card">
+        <h2>System Status</h2>
+        <div class="metric">CPU: <span id="cpu">--</span>%</div>
+        <div class="metric">Memory: <span id="mem">--</span>%</div>
+        <div class="metric">Disk: <span id="disk">--</span>%</div>
+    </div>
+
+    <div class="card">
+        <h2>Container: <span id="container-name">--</span></h2>
+        <div>Status: <span id="container-status">--</span></div>
+    </div>
+
+    <div class="card">
+        <h2>Recent Incidents</h2>
+        <div id="incidents">Loading...</div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000";
+
+        async function loadStatus() {
+            const res = await fetch(`${API_URL}/status`);
+            const data = await res.json();
+
+            document.getElementById("cpu").textContent = data.system.cpu_percent;
+            document.getElementById("mem").textContent = data.system.memory_percent;
+            document.getElementById("disk").textContent = data.system.disk_percent;
+
+            document.getElementById("container-name").textContent = data.container.name;
+            const statusEl = document.getElementById("container-status");
+            statusEl.textContent = data.container.status;
+            statusEl.className = data.container.status === "running" ? "healthy" : "down";
+        }
+
+        async function loadIncidents() {
+            const res = await fetch(`${API_URL}/incidents`);
+            const data = await res.json();
+
+            const container = document.getElementById("incidents");
+            if (data.length === 0) {
+                container.innerHTML = "No incidents yet.";
+                return;
+            }
+            container.innerHTML = data.map(i => `
+                <div class="incident">
+                    <strong>${i.timestamp}</strong> — ${i.container}: ${i.action} → ${i.result}
+                </div>
+            `).join("");
+        }
+
+        function refresh() {
+            loadStatus();
+            loadIncidents();
+        }
+
+        refresh();
+        setInterval(refresh, 5000);
+    </script>
+</body>
+</html>
