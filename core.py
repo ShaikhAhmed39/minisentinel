@@ -2,6 +2,7 @@ import psutil
 import subprocess
 import time
 import json
+import boto3
 from datetime import datetime
 
 INCIDENT_LOG = "incidents.log"
@@ -9,7 +10,14 @@ CONSECUTIVE_THRESHOLD = 3
 COOLDOWN_SECONDS = 60
 MAX_RETRIES = 3
 
+# ⚠️ REPLACE THIS with your real SNS Topic ARN
+SNS_TOPIC_ARN = "arn:aws:iam::520519513966:user/minisentinel-dev"
+SNS_REGION = "ap-south-1"
+
+sns_client = boto3.client('sns', region_name=SNS_REGION)
+
 container_state = {}
+
 
 def get_system_stats():
     cpu_percent = psutil.cpu_percent(interval=1)
@@ -21,6 +29,7 @@ def get_system_stats():
         "disk_percent": disk.percent
     }
 
+
 def get_container_status(container_name):
     try:
         result = subprocess.run(
@@ -31,6 +40,7 @@ def get_container_status(container_name):
     except Exception:
         return "error"
 
+
 def restart_container(container_name):
     try:
         result = subprocess.run(
@@ -40,6 +50,19 @@ def restart_container(container_name):
         return result.returncode == 0
     except Exception:
         return False
+
+
+def send_alert(subject, message):
+    try:
+        sns_client.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Subject=subject,
+            Message=message
+        )
+        print(f"[ALERT SENT] {subject}")
+    except Exception as e:
+        print(f"[ALERT FAILED] {e}")
+
 
 def log_incident(container_name, action, result, details=""):
     entry = {
@@ -53,6 +76,21 @@ def log_incident(container_name, action, result, details=""):
         f.write(json.dumps(entry) + "\n")
     print(f"[LOGGED] {entry}")
 
+    # Only alert on things that genuinely need human attention —
+    # routine successful auto-restarts stay silent so alerts stay meaningful.
+    if result in ("escalated", "failed"):
+        send_alert(
+            subject=f"MiniSentinel Alert: {container_name} - {result}",
+            message=(
+                f"Container: {container_name}\n"
+                f"Action: {action}\n"
+                f"Result: {result}\n"
+                f"Details: {details}\n"
+                f"Time: {entry['timestamp']}"
+            )
+        )
+
+
 def get_recent_incidents(limit=20):
     incidents = []
     try:
@@ -65,6 +103,7 @@ def get_recent_incidents(limit=20):
         pass
     return incidents
 
+
 def init_state(container_name):
     if container_name not in container_state:
         container_state[container_name] = {
@@ -73,6 +112,7 @@ def init_state(container_name):
             "retry_count": 0,
             "escalated": False
         }
+
 
 def check_and_heal(container_name):
     init_state(container_name)
@@ -87,7 +127,7 @@ def check_and_heal(container_name):
         return
 
     state["consecutive_down"] += 1
-    print(f"{container_name} down ({state['consecutive_down']}/{CONSECUTIVE_THRESHOLD} checks)")
+    print(f"⚠️  {container_name} down ({state['consecutive_down']}/{CONSECUTIVE_THRESHOLD} checks)")
 
     if state["consecutive_down"] < CONSECUTIVE_THRESHOLD:
         return

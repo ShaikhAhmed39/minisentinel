@@ -1,3 +1,4 @@
 psutil
 Fastapi
 uvicorn
+boto3
