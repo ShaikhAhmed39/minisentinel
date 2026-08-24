@@ -10,8 +10,8 @@ CONSECUTIVE_THRESHOLD = 3
 COOLDOWN_SECONDS = 60
 MAX_RETRIES = 3
 
-# ⚠️ REPLACE THIS with your real SNS Topic ARN
-SNS_TOPIC_ARN = "arn:aws:iam::520519513966:user/minisentinel-dev"
+# ⚠️REPLACE THIS with your real SNS Topic ARN
+SNS_TOPIC_ARN = "arn:aws:sns:ap-south-1:520519513966:minisentinel-alerts"
 SNS_REGION = "ap-south-1"
 
 sns_client = boto3.client('sns', region_name=SNS_REGION)
