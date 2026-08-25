@@ -5,3 +5,5 @@ __pycache__/
 *.csv
 *.db
 incidents.log
+aws/
+awscliv2.zip
