@@ -11,13 +11,14 @@ COOLDOWN_SECONDS = 60
 MAX_RETRIES = 3
 
 SNS_TOPIC_ARN = "arn:aws:sns:ap-south-1:520519513966:minisentinel-alerts"
-SNS_REGION = "ap-south-1"
+AWS_REGION = "ap-south-1"
 
 # ⚠️ REPLACE with your actual bucket name if different
 S3_BUCKET = "minisentinel-backups-ahmed"
 
-sns_client = boto3.client('sns', region_name=SNS_REGION)
-s3_client = boto3.client('s3', region_name=SNS_REGION)
+sns_client = boto3.client('sns', region_name=AWS_REGION)
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+cloudwatch_client = boto3.client('cloudwatch', region_name=AWS_REGION)
 
 container_state = {}
 
@@ -77,6 +78,33 @@ def backup_to_s3():
         print("[S3 BACKUP] Success")
     except Exception as e:
         print(f"[S3 BACKUP FAILED] {e}")
+
+
+def push_metrics_to_cloudwatch(stats):
+    try:
+        cloudwatch_client.put_metric_data(
+            Namespace='MiniSentinel',
+            MetricData=[
+                {
+                    'MetricName': 'CPUUtilization',
+                    'Value': stats['cpu_percent'],
+                    'Unit': 'Percent'
+                },
+                {
+                    'MetricName': 'MemoryUtilization',
+                    'Value': stats['memory_percent'],
+                    'Unit': 'Percent'
+                },
+                {
+                    'MetricName': 'DiskUtilization',
+                    'Value': stats['disk_percent'],
+                    'Unit': 'Percent'
+                },
+            ]
+        )
+        print("[CLOUDWATCH] Metrics pushed")
+    except Exception as e:
+        print(f"[CLOUDWATCH FAILED] {e}")
 
 
 def log_incident(container_name, action, result, details=""):

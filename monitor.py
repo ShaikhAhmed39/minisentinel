@@ -1,6 +1,6 @@
 import time
 from datetime import datetime
-from core import get_system_stats, check_and_heal
+from core import get_system_stats, check_and_heal, push_metrics_to_cloudwatch
 
 CHECK_INTERVAL = 10
 
@@ -9,6 +9,7 @@ if __name__ == "__main__":
     try:
         while True:
             stats = get_system_stats()
+            push_metrics_to_cloudwatch(stats)
             print(f"--- {datetime.now().strftime('%H:%M:%S')} ---")
             print(f"CPU: {stats['cpu_percent']}%  MEM: {stats['memory_percent']}%  DISK: {stats['disk_percent']}%")
             check_and_heal("test-app")
