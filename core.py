@@ -10,11 +10,14 @@ CONSECUTIVE_THRESHOLD = 3
 COOLDOWN_SECONDS = 60
 MAX_RETRIES = 3
 
-# ⚠️REPLACE THIS with your real SNS Topic ARN
 SNS_TOPIC_ARN = "arn:aws:sns:ap-south-1:520519513966:minisentinel-alerts"
 SNS_REGION = "ap-south-1"
 
+# ⚠️ REPLACE with your actual bucket name if different
+S3_BUCKET = "minisentinel-backups-ahmed"
+
 sns_client = boto3.client('sns', region_name=SNS_REGION)
+s3_client = boto3.client('s3', region_name=SNS_REGION)
 
 container_state = {}
 
@@ -64,6 +67,18 @@ def send_alert(subject, message):
         print(f"[ALERT FAILED] {e}")
 
 
+def backup_to_s3():
+    try:
+        s3_client.upload_file(
+            INCIDENT_LOG,
+            S3_BUCKET,
+            f"incidents/{datetime.now().strftime('%Y-%m-%d')}/incidents.log"
+        )
+        print("[S3 BACKUP] Success")
+    except Exception as e:
+        print(f"[S3 BACKUP FAILED] {e}")
+
+
 def log_incident(container_name, action, result, details=""):
     entry = {
         "timestamp": datetime.now().isoformat(),
@@ -76,8 +91,6 @@ def log_incident(container_name, action, result, details=""):
         f.write(json.dumps(entry) + "\n")
     print(f"[LOGGED] {entry}")
 
-    # Only alert on things that genuinely need human attention —
-    # routine successful auto-restarts stay silent so alerts stay meaningful.
     if result in ("escalated", "failed"):
         send_alert(
             subject=f"MiniSentinel Alert: {container_name} - {result}",
@@ -89,6 +102,8 @@ def log_incident(container_name, action, result, details=""):
                 f"Time: {entry['timestamp']}"
             )
         )
+
+    backup_to_s3()
 
 
 def get_recent_incidents(limit=20):
