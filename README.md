@@ -8,7 +8,7 @@ MiniSentinel watches a Docker container's health in real time. When it goes down
 
 ## 🎥 Demo
 
-*[Add your screen recording here — the exited → running transition, and the escalation-to-email clip, are your strongest assets]*
+
 
 ---
 
