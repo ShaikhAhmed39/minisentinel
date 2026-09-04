@@ -11,7 +11,7 @@ MiniSentinel watches a Docker container's health in real time. When it goes down
 https://github.com/ShaikhAhmed39/minisentinel/releases/download/v1.0-demo/docker.stop.mp4
 
 ### Escalation and alerting
-sha256:c15a9d5df25e28bc779b225ee488044ab4135d827061617b8d50748c611bf65d
+https://github.com/ShaikhAhmed39/minisentinel/releases/download/v1.0-demo/docker_escalated.mp4
 
 ---
 
