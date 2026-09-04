@@ -11,7 +11,7 @@ MiniSentinel watches a Docker container's health in real time. When it goes down
 sha256:56650f202fe3efcc00505d9838c0f823b1832e95edebebb80f0a1ea4454fa2dd
 
 ### Escalation and alerting
-
+sha256:c15a9d5df25e28bc779b225ee488044ab4135d827061617b8d50748c611bf65d
 
 ---
 
