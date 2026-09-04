@@ -7,7 +7,10 @@ MiniSentinel watches a Docker container's health in real time. When it goes down
 ---
 
 ## 🎥 Demo
+### Self-healing recovery
+sha256:56650f202fe3efcc00505d9838c0f823b1832e95edebebb80f0a1ea4454fa2dd
 
+### Escalation and alerting
 
 
 ---
